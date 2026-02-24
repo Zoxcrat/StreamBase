@@ -2,6 +2,8 @@ package com.example.StreamBase.models.dto.output;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class SerieOutputDTO {
 
@@ -12,5 +14,5 @@ public class SerieOutputDTO {
     private Integer totalViews;
     private Double totalWatchHours;
     private Boolean popular;
-    private GenreOutputDTO genre;
+    private List<GenreOutputDTO> genres;
 }

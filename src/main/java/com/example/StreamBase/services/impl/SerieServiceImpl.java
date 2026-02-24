@@ -15,6 +15,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class SerieServiceImpl implements SerieService {
@@ -26,10 +30,6 @@ public class SerieServiceImpl implements SerieService {
     @Override
     public SerieOutputDTO create(SerieCreateDTO dto) {
 
-        var genre = genreRepository.findById(dto.getGenreId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Genre not found"));
-
         Serie serie = new Serie();
         serie.setTitle(dto.getName());
         serie.setReview(dto.getReview());
@@ -38,15 +38,20 @@ public class SerieServiceImpl implements SerieService {
 
         Serie savedSerie = serieRepository.save(serie);
 
-        SerieGenre serieGenre = new SerieGenre();
-        serieGenre.setSerie(savedSerie);
-        serieGenre.setGenre(genre);
-        serieGenre.setAssociatedAt(java.time.LocalDate.now());
-
-        serieGenreRepository.save(serieGenre);
-
         
-        savedSerie.getSerieGenres().add(serieGenre);
+        dto.getGenreIds().forEach(genreId -> {
+            var genre = genreRepository.findById(genreId)
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException("Genre not found: " + genreId));
+
+            SerieGenre serieGenre = new SerieGenre();
+            serieGenre.setSerie(savedSerie);
+            serieGenre.setGenre(genre);
+            serieGenre.setAssociatedAt(LocalDate.now());
+
+            serieGenreRepository.save(serieGenre);
+            savedSerie.getSerieGenres().add(serieGenre);
+        });
 
         return mapToDTO(savedSerie);
     }
@@ -79,7 +84,7 @@ public class SerieServiceImpl implements SerieService {
         }
 
         return serieRepository
-                .findByGenreId(genreId, pageable)
+                .findBySerieGenresGenreId(genreId, pageable)
                 .map(this::mapToDTO);
     }
 
@@ -87,11 +92,11 @@ public class SerieServiceImpl implements SerieService {
     @Override
     public void delete(Long id) {
 
-        if (!serieRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Serie not found");
-        }
+        Serie serie = serieRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Serie not found"));
 
-        serieRepository.deleteById(id);
+        serieRepository.delete(serie);
     }
 
 
@@ -107,17 +112,19 @@ public class SerieServiceImpl implements SerieService {
         dto.setTotalWatchHours(serie.totalWatchHours());
         dto.setPopular(serie.isPopular());
 
-        
-        serie.getSerieGenres()
+       
+        List<GenreOutputDTO> genres = serie.getSerieGenres()
                 .stream()
                 .map(SerieGenre::getGenre)
-                .findFirst()
-                .ifPresent(genre -> {
+                .map(genre -> {
                     GenreOutputDTO genreDTO = new GenreOutputDTO();
                     genreDTO.setId(genre.getId());
                     genreDTO.setName(genre.getName());
-                    dto.setGenre(genreDTO);
-                });
+                    return genreDTO;
+                })
+                .collect(Collectors.toList());
+
+        dto.setGenres(genres);
 
         return dto;
     }

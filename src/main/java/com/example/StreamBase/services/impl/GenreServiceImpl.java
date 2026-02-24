@@ -30,7 +30,7 @@ public class GenreServiceImpl implements GenreService {
     @Override
     public Page<GenreOutputDTO> getAll(Pageable pageable) {
         return genreRepository.findAll(pageable)
-                .map(this::mapToDTO);
+                .map(genre -> mapToDTO(genre));
     }
 
     @Override
@@ -46,11 +46,10 @@ public class GenreServiceImpl implements GenreService {
     @Override
     public void delete(Long id) {
 
-        if (!genreRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Genre not found");
-        }
+        Genre genre = genreRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Genre not found"));
 
-        genreRepository.deleteById(id);
+        genreRepository.delete(genre);
     }
 
     private GenreOutputDTO mapToDTO(Genre genre) {

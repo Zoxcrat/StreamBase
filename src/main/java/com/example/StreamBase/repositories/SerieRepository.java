@@ -15,18 +15,11 @@ public interface SerieRepository extends JpaRepository<Serie, Long> {
 
     List<Serie> findByPlayCountGreaterThan(Integer playCount);
 
-    @Query("""
-        SELECT sg.serie
-        FROM SerieGenre sg
-        WHERE LOWER(sg.genre.name) = LOWER(:genreName)
-    """)
-    List<Serie> findSeriesByGenreName(@Param("genreName") String genreName);
+    
+    Page<Serie> findBySerieGenresGenreId(Long genreId, Pageable pageable);
 
-    @Query("""
-        SELECT DISTINCT sg.serie
-        FROM SerieGenre sg
-        WHERE sg.genre.id = :genreId
-    """)
-    Page<Serie> findByGenreId(@Param("genreId") Long genreId, Pageable pageable);
+    
+    @Query("SELECT s FROM Serie s WHERE s.playCount > :minPlayCount")
+    List<Serie> findPopularSeries(@Param("minPlayCount") Integer minPlayCount);
 
 }
