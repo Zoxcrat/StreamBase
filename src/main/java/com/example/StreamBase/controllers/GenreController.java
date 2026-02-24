@@ -1,8 +1,9 @@
 package com.example.StreamBase.controllers;
 
+import com.example.StreamBase.models.dto.input.GenreCreateDTO;
 import com.example.StreamBase.models.dto.output.GenreOutputDTO;
 import com.example.StreamBase.services.GenreService;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,8 +19,8 @@ public class GenreController {
     private final GenreService genreService;
 
     @PostMapping
-    public ResponseEntity<GenreOutputDTO> create(@RequestParam @NotBlank String name) {
-        GenreOutputDTO genre = genreService.create(name);
+    public ResponseEntity<GenreOutputDTO> create(@Valid @RequestBody GenreCreateDTO dto) {
+        GenreOutputDTO genre = genreService.create(dto.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(genre);
     }
 

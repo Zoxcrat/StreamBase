@@ -45,6 +45,9 @@ public class SerieServiceImpl implements SerieService {
 
         serieGenreRepository.save(serieGenre);
 
+        
+        savedSerie.getSerieGenres().add(serieGenre);
+
         return mapToDTO(savedSerie);
     }
 
